@@ -1,0 +1,17 @@
+{% extends 'clients/base.html' %}
+{% block title %}
+    Create New Client :: {{ block.super }}
+{% endblock %}
+{% block content %}
+    <h1>Create New Client</h1>
+    <hr>
+    <form method="post" action="{% url 'clients_create' %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <hr>
+        <button type="submit" name="create">Create New Client</button>
+        <button>
+            <a href="{% url 'clients_list' %}" style="text-decoration:none">Back to Clients List</a>
+        </button>
+    </form>
+{% endblock %}

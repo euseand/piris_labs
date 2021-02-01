@@ -1,0 +1,17 @@
+{% extends 'clients/base.html' %}
+{% block title %}
+    Update Client Details: {{ client.pk }} :: {{ block.super }}
+{% endblock %}
+{% block content %}
+    <h1>Update Client Details : {{ client.first_name }} {{ client.last_name }}</h1>
+    <hr>
+    <form method="post" action="{% url 'clients_update' pk=client.pk %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <hr>
+        <button type="submit" name="create">Save Changes</button>
+        <button>
+            <a href="{% url 'clients_list' %}" style="text-decoration:none">Back to Clients List</a>
+        </button>
+    </form>
+{% endblock %}

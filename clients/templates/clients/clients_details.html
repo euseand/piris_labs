@@ -1,0 +1,30 @@
+{% extends 'clients/base.html' %}
+{% block title %}
+    Client Details: {{ client.pk }} :: {{ block.super }}
+{% endblock %}
+{% block content %}
+    <h1>Client Details: {{ client.first_name }} {{ client.last_name }}</h1>
+    <hr>
+    <table>
+        <tr>
+            <td>Field</td>
+            <td>Value</td>
+        </tr>
+        {% for key,value in client_dict.items %}
+            <tr>
+                <td>{{ key }}</td>
+                <td>{{ value }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+    <hr>
+    <button>
+        <a href="{% url 'clients_update' pk=client.pk %}" style="text-decoration:none">Update Client Details</a>
+    </button>
+    <button>
+        <a href="{% url 'clients_delete' pk=client.pk %}" style="text-decoration:none">Delete Client</a>
+    </button>
+    <button>
+        <a href="{% url 'clients_list' %}" style="text-decoration:none">Back to Clients List</a>
+    </button>
+{% endblock %}

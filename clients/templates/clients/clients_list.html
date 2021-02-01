@@ -1,0 +1,30 @@
+{% extends 'clients/base.html' %}
+{% block title %}
+    Clients List :: {{ block.super }}
+{% endblock %}
+{% block content %}
+    <h1>Clients List</h1>
+    <hr>
+    <table>
+        <tr>
+            <td>Client Name</td>
+            <td>Birth Date</td>
+            <td>Passport ID</td>
+        </tr>
+        {% for client in clients_list %}
+            <tr>
+                <td>
+                    <a href="{% url 'clients_details' pk=client.id %}" style="text-decoration:none">
+                        {{ client.pk }}. {{ client.first_name }} {{ client.last_name }}
+                    </a>
+                </td>
+                <td>{{ client.birth_date | date:"d-m-Y" }}</td>
+                <td>{{ client.passport_serial }}{{ client.passport_number }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+    <hr>
+    <button>
+        <a href="{% url 'clients_create' %}" style="text-decoration:none">Create New Client</a>
+    </button>
+{% endblock %}

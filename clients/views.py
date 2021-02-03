@@ -22,7 +22,12 @@ def create_client(request):
             cleaned_data = form.cleaned_data
             new_client = Client(**cleaned_data)
             new_client.save()
-        return redirect('clients_list')
+            return redirect('clients_list')
+        else:
+            context = {
+                'form': form,
+            }
+            return render(request, 'clients/clients_create.html', context)
     else:
         form = ClientForm()
         context = {
@@ -42,16 +47,22 @@ def get_client_details(request, pk):
 
 
 def update_client(request, pk):
+    client = Client.objects.get(pk=pk)
+    client_dict = model_to_dict(client)
     if request.method == 'POST':
         form = ClientForm(request.POST)
         if form.is_valid():
             cleaned_data = form.cleaned_data
             client = Client(pk=pk, **cleaned_data)
             client.save(force_update=True)
-        return get_client_details(request, pk)
+            return get_client_details(request, pk)
+        else:
+            context = {
+                'client': client,
+                'form': form,
+            }
+            return render(request, 'clients/clients_update.html', context)
     else:
-        client = Client.objects.get(pk=pk)
-        client_dict = model_to_dict(client)
         form = ClientForm(client_dict)
         context = {
             'client': client,

@@ -1,4 +1,8 @@
+import re
+import datetime
+
 from django import forms
+from django.core.exceptions import ValidationError
 
 from clients.models import City, Citizenship, Disability, MaritalStatus, Client
 
@@ -13,9 +17,9 @@ class ClientForm(forms.Form):
     birth_date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}))
     sex = forms.ChoiceField(choices=(('M', 'Male'), ('F', 'Female')),
                             widget=forms.widgets.RadioSelect())
-    passport_serial = forms.CharField(max_length=64,
+    passport_serial = forms.CharField(max_length=2,
                                       widget=forms.TextInput(attrs={'class': 'form-control'}))
-    passport_number = forms.CharField(max_length=64,
+    passport_number = forms.CharField(max_length=6,
                                       widget=forms.NumberInput(attrs={'class': 'form-control'}))
     passport_authority = forms.CharField(max_length=64,
                                          widget=forms.TextInput(attrs={'class': 'form-control'}))
@@ -46,3 +50,81 @@ class ClientForm(forms.Form):
                                    widget=forms.CheckboxInput(attrs={'required': False}))
     monthly_income = forms.DecimalField(max_digits=19, decimal_places=4, required=False,
                                         widget=forms.NumberInput(attrs={'class': 'form-control'}))
+
+    def clean_last_name(self):
+        data = self.cleaned_data['last_name']
+        match = re.match(r'^[a-zA-Zа-яА-Я]+$', data)
+        if match is None:
+            raise ValidationError('Last name can only contain letters (a-zA-Z, а-яА-Я).')
+        return data
+
+    def clean_first_name(self):
+        data = self.cleaned_data['first_name']
+        match = re.match(r'^[a-zA-Zа-яА-Я]+$', data)
+        if match is None:
+            raise ValidationError('First name can only contain letters (a-zA-Z, а-яА-Я).')
+        return data
+
+    def clean_middle_name(self):
+        data = self.cleaned_data['middle_name']
+        match = re.match(r'^[a-zA-Zа-яА-Я]+$', data)
+        if match is None:
+            raise ValidationError('Middle name can only contain letters (a-zA-Z, а-яА-Я).')
+        return data
+
+    def clean_passport_serial(self):
+        data = self.cleaned_data['passport_serial']
+        match = re.match(r'^[a-zA-Zа-яА-Я]+$', data)
+        if match is None:
+            raise ValidationError('Passport serial can only contain letters (a-zA-Z, а-яА-Я).')
+        return data
+
+    def clean_passport_number(self):
+        data = self.cleaned_data['passport_number']
+        data2 = self.cleaned_data['passport_serial']
+        match = re.match(r'^[0-9]+$', data)
+        if match is None:
+            raise ValidationError('Passport number can only contain numbers (0-9).')
+        if Client.objects.filter(passport_number=data, passport_serial=data2).exists():
+            raise ValidationError('Client with this passport exists.')
+        return data
+
+    def clean_passport_authority(self):
+        data = self.cleaned_data['passport_authority']
+        match = re.match(r'^[a-zA-Zа-яА-Я0-9]+$', data)
+        if match is None:
+            raise ValidationError('Passport authority can only contain letters and numbers (a-zA-Z, а-яА-Я, 0-9).')
+        return data
+
+    def clean_id_number(self):
+        data = self.cleaned_data['id_number']
+        match = re.match(r'^[0-9]+$', data)
+        if match is None:
+            raise ValidationError('ID number can only contain numbers (0-9).')
+        if Client.objects.filter(id_number=data).exists():
+            raise ValidationError('Client with this id number exists.')
+        return data
+
+    def clean_birth_place(self):
+        data = self.cleaned_data['birth_place']
+        match = re.match(r'^[a-zA-Zа-яА-Я]+$', data)
+        if match is None:
+            raise ValidationError('Birth place can only contain letters (a-zA-Z, а-яА-Я).')
+        return data
+
+    def clean_birth_date(self):
+        data = self.cleaned_data['birth_date']
+        delta = (datetime.date.today()-data).days
+        if delta < 0:
+            raise ValidationError('Client cannot be from the future.')
+        return data
+
+    def clean_passport_issue_date(self):
+        data = self.cleaned_data['passport_issue_date']
+        delta = (datetime.date.today()-data).days
+        if delta < 0:
+            raise ValidationError('Client cannot be from the future.')
+        return data
+
+
+

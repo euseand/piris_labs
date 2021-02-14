@@ -7,7 +7,7 @@ from clients.forms import ClientForm
 
 # CLIENTS LIST
 def get_clients_list(request):
-    clients_list = Client.objects.all()
+    clients_list = Client.objects.all().order_by('last_name')
     context = {
         'clients_list': clients_list,
     }

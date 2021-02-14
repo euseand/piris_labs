@@ -1,5 +1,6 @@
 from django.db import models
 from django.urls import reverse_lazy
+from django.utils import timezone
 
 
 class City(models.Model):
@@ -50,13 +51,13 @@ class Client(models.Model):
     last_name = models.CharField(max_length=64)
     first_name = models.CharField(max_length=64)
     middle_name = models.CharField(max_length=64)
-    birth_date = models.DateField()
+    birth_date = models.DateField(default=timezone.now)
     sex = models.CharField(max_length=1, choices=(('M', 'Male'), ('F', 'Female')))
-    passport_serial = models.CharField(max_length=64)
-    passport_number = models.CharField(max_length=64)
+    passport_serial = models.CharField(max_length=2)
+    passport_number = models.CharField(max_length=6, unique=True)
     passport_authority = models.CharField(max_length=64)
     passport_issue_date = models.DateField()
-    id_number = models.CharField(max_length=64)
+    id_number = models.CharField(max_length=64, unique=True)
     birth_place = models.CharField(max_length=64)
     living_place = models.ForeignKey(City, related_name='clients_living_place', on_delete=models.RESTRICT)
     living_address = models.CharField(max_length=64)

@@ -72,7 +72,7 @@ class Client(models.Model):
     monthly_income = models.DecimalField(max_digits=19, decimal_places=4, blank=True, null=True)
 
     def __str__(self):
-        return self.last_name + self.first_name
+        return str(self.id) + '/' + self.last_name + self.first_name
 
     def get_absolute_url(self):
         return reverse_lazy('client', kwargs={"pk": self.pk})
@@ -82,8 +82,43 @@ class Client(models.Model):
         verbose_name_plural = 'Clients'
 
 
+class Account(models.Model):
+    number = models.CharField(max_length=13)
+    main = models.BooleanField()
+    name = models.CharField(max_length=30)
+    code = models.CharField(max_length=4)
+    activity = models.CharField(max_length=7)
+    debit = models.DecimalField(max_digits=19, decimal_places=2)
+    credit = models.DecimalField(max_digits=19, decimal_places=2)
+    balance = models.DecimalField(max_digits=19, decimal_places=2)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = 'Account'
+        verbose_name_plural = 'Accounts'
 
 
+class Deposit(models.Model):
+    client = models.ForeignKey(Client, related_name='deposit_client', on_delete=models.RESTRICT)
+    main_account = models.ForeignKey(Account, related_name='deposit_main_account', on_delete=models.RESTRICT)
+    percent_account = models.ForeignKey(Account, related_name='deposit_percent_account', on_delete=models.RESTRICT)
+    revocable = models.BooleanField()
+    number = models.CharField(max_length=20)
+    currency = models.CharField(max_length=3)
+    start_date = models.DateField(auto_now_add=True)
+    end_date = models.DateField()
+    amount = models.DecimalField(max_digits=19, decimal_places=2)
+    percents = models.DecimalField(max_digits=6, decimal_places=2)
+    days_left = models.IntegerField()
+    pay_monthly = models.BooleanField()
+    active = models.BooleanField(auto_created=True, default=True)
 
+    def __str__(self):
+        return str(self.id) + '/' + self.client.last_name + self.client.first_name + '/' + \
+               self.number + '/' + self.currency
 
-
+    class Meta:
+        verbose_name = 'Deposit'
+        verbose_name_plural = 'Deposits'

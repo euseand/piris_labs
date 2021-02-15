@@ -1,21 +1,21 @@
 {% extends 'clients/base.html' %}
+
 {% block title %}
-    Update Client Details: {{ client.pk }} :: {{ block.super }}
+    Open New Deposit :: {{ block.super }}
 {% endblock %}
 {% block content %}
-    <h1 class="container-fluid mt-4">Update Client Details : {{ client.last_name }} {{ client.first_name }}</h1>
+    <h1 class="container-fluid mt-4">Open New Deposit : {{ client_ln }} {{ client_fn }}</h1>
     <div class="container-fluid mt-4">
         <div class="row">
             <div class="col-md-3">
-                <a role="button" class="btn btn-lg btn-outline-dark form-control"
-                   href="{% url 'clients_list' %}">
+                <a role="button" class="btn btn-lg btn-outline-dark form-control" href="{% url 'clients_list' %}">
                     <strong>Clients List</strong>
                 </a>
             </div>
         </div>
     </div>
     <div class="container-fluid mt-4">
-        <form method="post" action="{% url 'clients_update' pk=client.pk %}">
+        <form method="post" action="{% url 'clients_deposits_create' pk=client_pk %}">
             {% csrf_token %}
             <table class="table table-striped table-bordered">
                 <tr>
@@ -35,7 +35,7 @@
                 {% endfor %}
             </table>
             <button type="submit" name="create" class="btn btn-lg btn-outline-dark mt-2 mb-4">
-                <strong>Save Changes</strong>
+                <strong>Save New Deposit</strong>
             </button>
         </form>
     </div>

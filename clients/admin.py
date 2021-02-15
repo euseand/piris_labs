@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from clients.models import City, Citizenship, Disability, MaritalStatus, Client
+from clients.models import City, Citizenship, Disability, MaritalStatus, Client, Deposit, Account
 
 
 class CityAdmin(admin.ModelAdmin):
@@ -43,12 +43,24 @@ class ClientAdmin(admin.ModelAdmin):
     radio_fields = {'sex': admin.HORIZONTAL, 'pensioner': admin.HORIZONTAL}
 
 
+class DepositAdmin(admin.ModelAdmin):
+    model = Deposit
+    list_display = ('id',)
+    list_display_links = ()
+    ordering = ('client',)
+
+
+class AccountAdmin(admin.ModelAdmin):
+    model = Account
+    list_display = ('id',)
+    list_display_links = ()
+    ordering = ('name',)
+
+
 admin.site.register(City, CityAdmin)
 admin.site.register(Citizenship, CitizenshipAdmin)
 admin.site.register(Disability, DisabilityAdmin)
 admin.site.register(MaritalStatus, MartialStatusAdmin)
 admin.site.register(Client, ClientAdmin)
-
-
-
-
+admin.site.register(Deposit, DepositAdmin)
+admin.site.register(Account, AccountAdmin)

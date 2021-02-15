@@ -127,4 +127,47 @@ class ClientForm(forms.Form):
         return data
 
 
+class DepositForm(forms.Form):
+    last_name = forms.CharField(
+        max_length=64,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    first_name = forms.CharField(
+        max_length=64,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    passport = forms.CharField(
+        max_length=20,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    revocable = forms.ChoiceField(
+        choices=((True, 'Revocable'), (False, 'Irrevocable')),
+        widget=forms.RadioSelect()
+    )
+    number = forms.CharField(
+        max_length=64,
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+    currency = forms.CharField(
+        max_length=64,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    start_date = forms.DateField(
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
+    )
+    end_date = forms.DateField(
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
+    )
+    amount = forms.DecimalField(
+        max_digits=19,
+        decimal_places=4,
+        required=False,
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+    percents = forms.DecimalField(
+        max_digits=19,
+        decimal_places=4,
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+
 

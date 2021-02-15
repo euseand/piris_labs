@@ -1,0 +1,62 @@
+{% extends 'clients/base.html' %}
+{% block title %}
+    Client Deposits : {{ client.pk }} :: {{ block.super }}
+{% endblock %}
+{% block content %}
+    <h1 class="container-fluid mt-4">Client Deposits : {{ client.last_name }} {{ client.first_name }}</h1>
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-md-3">
+                <a role="button" class="btn btn-lg btn-outline-dark form-control"
+                   href="{% url 'clients_list' %}">
+                    <strong>Clients List</strong>
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a role="button" class="btn btn-lg btn-outline-dark form-control"
+                   href="{% url 'clients_deposits_create' pk=client.pk %}">
+                    <strong>Open New Deposit</strong>
+                </a>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div class="container-fluid mt-4">
+        <table class="table table-bordered table-striped">
+            <tr scope="row">
+                <th>ID</th>
+                <th>Client</th>
+                <th>Revocable</th>
+                <th>Number</th>
+                <th>Currency</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Amount</th>
+                <th>Main Account Amount</th>
+                <th>Percents</th>
+                <th>Percents Account Amount</th>
+                <th>Active</th>
+            </tr>
+            {% for deposit in deposits %}
+                <tr scope="row">
+                    <td>{{ deposit.id }}</td>
+                    <td>
+                        <a href="{% url 'clients_details' pk=client.id %}" class="link-dark text-decoration-none">
+                            {{ deposit.client.last_name}}  {{ deposit.client.first_name }}
+                        </a>
+                    </td>
+                    <td>{{ deposit.revocable }}</td>
+                    <td>{{ deposit.number }}</td>
+                    <td>{{ deposit.currency }}</td>
+                    <td>{{ deposit.start_date | date:"d-m-Y" }}</td>
+                    <td>{{ deposit.end_date | date:"d-m-Y" }}</td>
+                    <td>{{ deposit.amount }}</td>
+                    <td>{{ deposit.main_account.balance }}</td>
+                    <td>{{ deposit.percents }}</td>
+                    <td>{{ deposit.percent_account.balance }}</td>
+                    <td>{{ deposit.active }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+{% endblock %}

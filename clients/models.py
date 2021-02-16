@@ -83,7 +83,6 @@ class Client(models.Model):
 
 
 class Account(models.Model):
-    deposit = models.ForeignKey('Deposit', related_name='account_deposit', on_delete=models.CASCADE, null=True)
     number = models.CharField(max_length=13)
     main = models.BooleanField()
     name = models.CharField(max_length=30)

@@ -83,7 +83,7 @@ def delete_client(request, pk):
 # DEPOSITS LIST
 def get_deposits_list(request, pk):
     client = Client.objects.get(pk=pk)
-    deposits = Deposit.objects.filter(client=pk)
+    deposits = Deposit.objects.filter(client_id=pk)
     context = {
         'client': client,
         'deposits': deposits,
@@ -96,7 +96,7 @@ def get_accounts_list(request, pk):
     client = Client.objects.get(pk=pk)
     deposits = Deposit.objects.filter(client=pk)
     accounts = []
-    accounts.append(Account.objects.get(pk=13))
+    accounts.append(Account.objects.get(name='BDFA'))
     for deposit in deposits:
         accounts.append(Account.objects.get(pk=deposit.main_account.id))
         accounts.append(Account.objects.get(pk=deposit.percent_account.id))
@@ -110,7 +110,7 @@ def get_accounts_list(request, pk):
 # OPEN NEW DEPOSIT
 def create_deposit(request, pk):
     client = Client.objects.get(pk=pk)
-    account = Account.objects.get(pk=13)
+    account = Account.objects.get(name='BDFA')
     if request.method == 'POST':
         form = DepositForm(request.POST)
         if form.is_valid():
@@ -141,11 +141,11 @@ def create_deposit(request, pk):
             new_deposit.percent_account = percent_account
             delta = new_deposit.end_date - new_deposit.start_date
             new_deposit.days_left = delta.days
-            pay_monthly = True if cleaned_data['revocable'] else False
+            pay_monthly = cleaned_data['revocable']
             new_deposit.pay_monthly = pay_monthly
             new_deposit.save()
 
-            bank = Account.objects.get(pk=13)
+            bank = Account.objects.get(name='BDFA')
             bank.debit = bank.debit + new_deposit.amount
             bank.balance = abs(bank.debit - bank.credit)
             bank.save()
@@ -196,7 +196,7 @@ def is_deposit_ended():
     for deposit in deposits:
         if deposit.days_left <= 0:
 
-            bank = Account.objects.get(pk=13)
+            bank = Account.objects.get(name='BDFA')
             bank.credit = bank.credit + deposit.amount
             bank.balance = abs(bank.debit - bank.credit)
             bank.save()
@@ -222,7 +222,7 @@ def close_day(request, pk):
 
     is_deposit_ended()
 
-    deposits = Deposit.objects.all()
+    deposits = Deposit.objects.filter(client__id=pk)
     client = Client.objects.get(pk=pk)
     context = {
         'client': client,
@@ -244,7 +244,7 @@ def close_month(request, pk):
 
     is_deposit_ended()
 
-    deposits = Deposit.objects.all()
+    deposits = Deposit.objects.filter(client__id=pk)
     client = Client.objects.get(pk=pk)
     context = {
         'client': client,

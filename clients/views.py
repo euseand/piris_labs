@@ -96,6 +96,7 @@ def get_accounts_list(request, pk):
     client = Client.objects.get(pk=pk)
     deposits = Deposit.objects.filter(client=pk)
     accounts = []
+    accounts.append(Account.objects.get(pk=13))
     for deposit in deposits:
         accounts.append(Account.objects.get(pk=deposit.main_account.id))
         accounts.append(Account.objects.get(pk=deposit.percent_account.id))
@@ -109,12 +110,21 @@ def get_accounts_list(request, pk):
 # OPEN NEW DEPOSIT
 def create_deposit(request, pk):
     client = Client.objects.get(pk=pk)
+    account = Account.objects.get(pk=13)
     if request.method == 'POST':
         form = DepositForm(request.POST)
         if form.is_valid():
             cleaned_data = form.cleaned_data
-            deposit_id = Deposit.objects.filter(client=pk).count() + 1
-            new_deposit = Deposit()
+            new_deposit = Deposit.objects.create(revocable=True, number='0', start_date='2021-01-01',
+                                                 end_date='2021-01-01', currency='USD', amount='0', percents='0',
+                                                 client=client, main_account=account, percent_account=account,
+                                                 days_left=0, pay_monthly=True)
+            new_deposit.save()
+
+            new_deposit = Deposit.objects.get(number='0')
+            deposit_id = new_deposit.pk
+            #deposit_id = Deposit.objects.last().pk + 1
+            #new_deposit = Deposit()
             new_deposit.revocable = cleaned_data['revocable']
             new_deposit.number = cleaned_data['number']
             new_deposit.start_date = cleaned_data['start_date']

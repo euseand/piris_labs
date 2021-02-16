@@ -107,7 +107,7 @@ class Deposit(models.Model):
     revocable = models.BooleanField()
     number = models.CharField(max_length=20)
     currency = models.CharField(max_length=3)
-    start_date = models.DateField(auto_now_add=True)
+    start_date = models.DateField()
     end_date = models.DateField()
     amount = models.DecimalField(max_digits=19, decimal_places=2)
     percents = models.DecimalField(max_digits=6, decimal_places=2)

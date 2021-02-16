@@ -10,5 +10,8 @@ urlpatterns = [
     path('clients/update/<int:pk>', update_client, name='clients_update'),
     path('clients/delete/<int:pk>', delete_client, name='clients_delete'),
     path('clients/details/<int:pk>/deposites/', get_deposits_list, name='clients_deposits'),
-    path('clients/details/<int:pk>/deposites/create', create_deposit, name='clients_deposits_create')
+    path('clients/details/<int:pk>/deposites/create', create_deposit, name='clients_deposits_create'),
+    path('clients/details/<int:pk>/close_day', close_day, name='clients_close_day'),
+    path('clients/details/<int:pk>/close_month', close_month, name='clients_close_month'),
+    path('clients/details/<int:pk>/accounts/', get_accounts_list, name='clients_accounts'),
 ]

@@ -1,9 +1,9 @@
 {% extends 'clients/base.html' %}
 {% block title %}
-    Client Deposits : {{ client.pk }} :: {{ block.super }}
+    Client Accounts : {{ client.pk }} :: {{ block.super }}
 {% endblock %}
 {% block content %}
-    <h1 class="container-fluid mt-4">Client Deposits : {{ client.last_name }} {{ client.first_name }}</h1>
+    <h1 class="container-fluid mt-4">Client Accounts : {{ client.last_name }} {{ client.first_name }}</h1>
     <div class="container-fluid mt-4">
         <div class="row">
             <div class="col-md-3">
@@ -14,8 +14,8 @@
             </div>
             <div class="col-md-3">
                 <a role="button" class="btn btn-lg btn-outline-dark form-control"
-                   href="{% url 'clients_deposits_create' pk=client.pk %}">
-                    <strong>Open New Deposit</strong>
+                   href="{% url 'clients_deposits' pk=client.pk%}">
+                    <strong>Show Client Deposits</strong>
                 </a>
             </div>
             <div class="col-md-3">
@@ -38,37 +38,31 @@
             <tr scope="row">
                 <th>ID</th>
                 <th>Client</th>
-                <th>Revocable</th>
                 <th>Number</th>
-                <th>Currency</th>
-                <th>Start Date</th>
-                <th>End Date</th>
-                <th>Amount</th>
-                <th>Percents</th>
-                <th>Main Account Amount</th>
-                <th>Percents Account Amount</th>
-                <th>Active</th>
-                <th>Days Left</th>
+                <th>Main</th>
+                <th>Name</th>
+                <th>Code</th>
+                <th>Activity</th>
+                <th>Debit</th>
+                <th>Credit</th>
+                <th>Balance</th>
             </tr>
-            {% for deposit in deposits %}
+            {% for account in accounts %}
                 <tr scope="row">
-                    <td>{{ deposit.id }}</td>
+                    <td>{{ account.id }}</td>
                     <td>
                         <a href="{% url 'clients_details' pk=client.id %}" class="link-dark text-decoration-none">
-                            {{ deposit.client.last_name}}  {{ deposit.client.first_name }}
+                            {{ client.last_name}}  {{ client.first_name }} {{ client.passport_serial }}{{ client.passport_number }}
                         </a>
                     </td>
-                    <td>{{ deposit.revocable }}</td>
-                    <td>{{ deposit.number }}</td>
-                    <td>{{ deposit.currency }}</td>
-                    <td>{{ deposit.start_date | date:"d-m-Y" }}</td>
-                    <td>{{ deposit.end_date | date:"d-m-Y" }}</td>
-                    <td>{{ deposit.amount }}</td>
-                    <td>{{ deposit.percents }}</td>
-                    <td>{{ deposit.main_account.balance }}</td>
-                    <td>{{ deposit.percent_account.balance }}</td>
-                    <td>{{ deposit.active }}</td>
-                    <td>{{ deposit.days_left }}</td>
+                    <td>{{ account.number }}</td>
+                    <td>{{ account.main }}</td>
+                    <td>{{ account.name }}</td>
+                    <td>{{ account.code }}</td>
+                    <td>{{ account.activity }}</td>
+                    <td>{{ account.debit }}</td>
+                    <td>{{ account.credit }}</td>
+                    <td>{{ account.balance }}</td>
                 </tr>
             {% endfor %}
         </table>

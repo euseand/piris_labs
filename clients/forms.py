@@ -4,7 +4,7 @@ import datetime
 from django import forms
 from django.core.exceptions import ValidationError
 
-from clients.models import City, Citizenship, Disability, MaritalStatus, Client, Deposit
+from clients.models import City, Citizenship, Disability, MaritalStatus, Client, Deposit, Credit
 
 
 class ClientForm(forms.Form):
@@ -205,6 +205,89 @@ class DepositForm(forms.Form):
             delta = (end-start).days
             if delta <= 0:
                 raise ValidationError('Deposit cannot be ended by/before the start date.')
+            return end
+        except KeyError:
+            pass
+
+
+class CreditForm(forms.Form):
+    last_name = forms.CharField(
+        max_length=64,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    first_name = forms.CharField(
+        max_length=64,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    passport = forms.CharField(
+        max_length=20,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    annuity = forms.ChoiceField(
+        choices=((True, 'Annuitant'), (False, 'Differential')),
+        widget=forms.Select()
+    )
+    number = forms.CharField(
+        max_length=64,
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+    currency = forms.ChoiceField(
+        choices=(('USD', 'USD'), ('EUR', 'EUR'), ('RUB', 'RUB'), ('BYN', 'BYN')),
+        widget=forms.Select()
+    )
+    start_date = forms.DateField(
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
+    )
+    end_date = forms.DateField(
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
+    )
+    amount = forms.DecimalField(
+        max_digits=19,
+        decimal_places=4,
+        required=False,
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+    percents = forms.DecimalField(
+        max_digits=19,
+        decimal_places=4,
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+
+    def clean_number(self):
+        data = self.cleaned_data['number']
+        match = re.match(r'^[0-9]+$', data)
+        if match is None:
+            raise ValidationError('Credit number can only contain numbers (0-9).')
+        if Credit.objects.filter(number=data).exists():
+            raise ValidationError('Credit with this number exists.')
+        return data
+
+    def clean_amount(self):
+        data = self.cleaned_data['amount']
+        if data <= 0:
+            raise ValidationError('Credit amount cannot be negative.')
+        return data
+
+    def clean_percents(self):
+        data = self.cleaned_data['percents']
+        if data <= 0:
+            raise ValidationError('Credit percents cannot be negative.')
+        return data
+
+    def clean_start_date(self):
+        start = self.cleaned_data['start_date']
+        delta = (datetime.date.today() - start).days
+        if delta > 0:
+            raise ValidationError('Credit cannot be started from the past.')
+        return start
+
+    def clean_end_date(self):
+        try:
+            start = self.cleaned_data['start_date']
+            end = self.cleaned_data['end_date']
+            delta = (end-start).days
+            if delta <= 0:
+                raise ValidationError('Credit cannot be ended by/before the start date.')
             return end
         except KeyError:
             pass

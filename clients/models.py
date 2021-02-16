@@ -83,6 +83,8 @@ class Client(models.Model):
 
 
 class Account(models.Model):
+    deposit = models.ForeignKey('Deposit', related_name='account_deposit', on_delete=models.CASCADE,
+                                blank=True, null=True)
     number = models.CharField(max_length=13)
     main = models.BooleanField()
     name = models.CharField(max_length=30)
@@ -112,6 +114,7 @@ class Deposit(models.Model):
     amount = models.DecimalField(max_digits=19, decimal_places=2)
     percents = models.DecimalField(max_digits=6, decimal_places=2)
     days_left = models.IntegerField()
+    days_passed = models.IntegerField()
     pay_monthly = models.BooleanField()
     active = models.BooleanField(auto_created=True, default=True)
 
@@ -122,3 +125,30 @@ class Deposit(models.Model):
     class Meta:
         verbose_name = 'Deposit'
         verbose_name_plural = 'Deposits'
+
+
+class Credit(models.Model):
+    client = models.ForeignKey(Client, related_name='credit_client', on_delete=models.RESTRICT)
+    main_account = models.ForeignKey(Account, related_name='credit_main_account', on_delete=models.RESTRICT)
+    percent_account = models.ForeignKey(Account, related_name='credit_percent_account', on_delete=models.RESTRICT)
+    annuity = models.BooleanField()
+    number = models.CharField(max_length=20)
+    currency = models.CharField(max_length=3)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    amount = models.DecimalField(max_digits=19, decimal_places=2)
+    percents = models.DecimalField(max_digits=6, decimal_places=2)
+    days_left = models.IntegerField()
+    days_passed = models.IntegerField()
+    amount_left = models.DecimalField(max_digits=19, decimal_places=2)
+    amount_paid = models.DecimalField(max_digits=19, decimal_places=2)
+    pay_period = models.IntegerField()
+    active = models.BooleanField(auto_created=True, default=True)
+
+    def __str__(self):
+        return str(self.id) + '/' + self.client.last_name + self.client.first_name + '/' + \
+               self.number + '/' + self.currency
+
+    class Meta:
+        verbose_name = 'Credit'
+        verbose_name_plural = 'Credits'

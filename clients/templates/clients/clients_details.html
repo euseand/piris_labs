@@ -37,6 +37,12 @@
             </div>
             <div class="col-md-3">
                 <a role="button" class="btn btn-lg btn-outline-dark form-control"
+                   href="{% url 'clients_credits' pk=client.pk%}">
+                    <strong>Show Client Credits</strong>
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a role="button" class="btn btn-lg btn-outline-dark form-control"
                    href="{% url 'clients_accounts' pk=client.pk%}">
                     <strong>Show Client Accounts</strong>
                 </a>

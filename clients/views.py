@@ -1,4 +1,5 @@
 import datetime
+import math
 
 from django.db.models import F
 from django.shortcuts import render, redirect
@@ -91,26 +92,66 @@ def get_deposits_list(request, pk):
     return render(request, 'clients/clients_deposits.html', context)
 
 
+# WITHDRAW DEPOSIT MONEY FROM CASH
+def withdraw_deposit(request, pk, account_id):
+    # ACCOUNTS TO USE
+    cash = Account.objects.get(name='CASH')
+    account = Account.objects.get(pk=account_id)
+    amount = account.balance
+
+    # MAIN/PERCENTS -> CASH -> CASH TO CLIENT
+    change_account_debit(account, amount)
+    change_account_debit(cash, amount)
+    change_account_credit(cash, amount)
+
+    return get_deposits_list(request, pk)
+
+
 # CREDITS LIST
 def get_credits_list(request, pk):
     client = Client.objects.get(pk=pk)
-    deposits = Credit.objects.filter(client_id=pk)
+    bank_credits = Credit.objects.filter(client_id=pk)
     context = {
         'client': client,
-        'credits': credits,
+        'credits': bank_credits,
     }
     return render(request, 'clients/clients_credits.html', context)
+
+
+# DEPOSIT CREDIT MONEY TO CASH
+def deposit_credit(request, pk, account_id, credit_id):
+    # ACCOUNTS TO USE
+    credit = Credit.objects.get(pk=credit_id)
+    cash = Account.objects.get(name='CASH')
+    account = Account.objects.get(pk=account_id)
+    amount = account.balance
+
+    # CLIENT TO CASH -> CASH -> MAIN/PERCENT
+
+    change_account_debit(cash, amount)
+    change_account_credit(cash, amount)
+    change_account_debit(account, amount)
+    credit.amount_paid = math.ceil(credit.amount_paid) + amount
+    credit.amount_left = math.ceil(credit.amount_left)
+    credit.save()
+
+    return get_credits_list(request, pk)
 
 
 # ACCOUNTS LIST
 def get_accounts_list(request, pk):
     client = Client.objects.get(pk=pk)
     deposits = Deposit.objects.filter(client=pk)
+    bank_credits = Credit.objects.filter(client=pk)
     accounts = []
     accounts.append(Account.objects.get(name='BDFA'))
+    accounts.append(Account.objects.get(name='CASH'))
     for deposit in deposits:
         accounts.append(Account.objects.get(pk=deposit.main_account.id))
         accounts.append(Account.objects.get(pk=deposit.percent_account.id))
+    for credit in bank_credits:
+        accounts.append(Account.objects.get(pk=credit.main_account.id))
+        accounts.append(Account.objects.get(pk=credit.percent_account.id))
     context = {
         'client': client,
         'accounts': accounts,
@@ -142,10 +183,12 @@ def create_deposit(request, pk):
             new_deposit.amount = cleaned_data['amount']
             new_deposit.percents = cleaned_data['percents']
             new_deposit.client = client
-            main_account = create_account(client=client, main=True, code='1523',
-                                          activity='Passive', currency=cleaned_data['currency'], deposit_id=deposit_id)
+
+            main_account = create_account(client=client, main=True, code='1523', activity='Passive',
+                                          currency=cleaned_data['currency'], credit_deposit_id=deposit_id)
             percent_account = create_account(client=client, main=False, code='1572', activity='Passive',
-                                             currency=cleaned_data['currency'], deposit_id=deposit_id)
+                                             currency=cleaned_data['currency'], credit_deposit_id=deposit_id)
+
             new_deposit.main_account = main_account
             new_deposit.percent_account = percent_account
             delta = new_deposit.end_date - new_deposit.start_date
@@ -155,17 +198,17 @@ def create_deposit(request, pk):
             new_deposit.pay_monthly = pay_monthly
             new_deposit.save()
 
-            # CHANGE THAT
+            # ACCOUNTS TO USE
             cash = Account.objects.get(name='CASH')
             bank = Account.objects.get(name='BDFA')
             main = Account.objects.get(pk=new_deposit.main_account_id)
 
-            change_account_credit(cash, new_deposit.amount)
+            # DEPOSIT CASH -> CASH -> MAIN ACCOUNT -> BANK ACCOUNT
             change_account_debit(cash, new_deposit.amount)
+            change_account_credit(cash, new_deposit.amount)
             change_account_credit(main, new_deposit.amount)
             change_account_debit(main, new_deposit.amount)
             change_account_credit(bank, new_deposit.amount)
-
 
             return redirect('clients_deposits', pk=pk)
         else:
@@ -227,19 +270,20 @@ def create_credit(request, pk):
             new_credit.days_passed = 0
             new_credit.amount_left = new_credit.amount + new_credit.amount * new_credit.percents / 100
             new_credit.amount_paid = 0
+            new_credit.pay_period = math.floor(delta.days/math.ceil(delta.days / 30))
             new_credit.save()
 
-            #CHANGE THAT
+            # ACCOUNTS TO USE
             cash = Account.objects.get(name='CASH')
             bank = Account.objects.get(name='BDFA')
             main = Account.objects.get(pk=new_credit.main_account_id)
 
-            change_account_credit(cash, new_credit.amount)
+            # BANK -> MAIN -> CASH -> CASH CLIENT
+            change_account_debit(bank, new_credit.amount)
+            change_account_debit(main, new_credit.amount)
             change_account_debit(cash, new_credit.amount)
             change_account_credit(main, new_credit.amount)
-            change_account_debit(main, new_credit.amount)
-            change_account_credit(bank, new_credit.amount)
-
+            change_account_credit(cash, new_credit.amount)
 
             return redirect('clients_credits', pk=pk)
         else:
@@ -262,6 +306,7 @@ def create_credit(request, pk):
         return render(request, 'clients/clients_credits_create.html', context)
 
 
+# CREATE NEW ACCOUNT
 def create_account(client, main, code, activity, currency, credit_deposit_id):
     client_id = getattr(client, 'id')
     account_id = str(credit_deposit_id).zfill(3) + '1' if main else str(credit_deposit_id).zfill(3) + '2'
@@ -271,37 +316,50 @@ def create_account(client, main, code, activity, currency, credit_deposit_id):
            + '/' + currency
     credit = 0
     debit = 0
-    balance = abs(credit - debit)
+    balance = 0
     account = Account(number=number, main=main, name=name, code=code, activity=activity, debit=debit, credit=credit,
                       balance=balance)
     account.save()
     return account
 
 
+# ACCOUNT DEBIT CHANGES
 def change_account_debit(account, amount):
-    account.debit = account.debit + amount
-    account.balance = abs(account.credit - account.debit)
+    if account.activity == 'Active':
+        account.debit = account.debit + amount
+        account.balance = abs(account.debit - account.credit)
+    else:
+        account.debit = account.debit - amount
+        account.balance = abs(account.credit - account.debit)
     account.save()
 
 
+# ACCOUNT CREDIT CHANGES
 def change_account_credit(account, amount):
-    account.credit = account.credit + amount
-    account.balance = abs(account.credit - account.debit)
+    if account.activity == 'Passive':
+        account.credit = account.credit - amount
+        account.balance = abs(account.debit - account.credit)
+    else:
+        account.credit = account.credit + amount
+        account.balance = abs(account.credit - account.debit)
     account.save()
 
 
-def is_deposit_ended():
+def is_deposit_closed():
     deposits = Deposit.objects.filter(active=True)
     for deposit in deposits:
         if deposit.days_left <= 0:
 
+            # CLOSE DEPOSIT
+            # ACCOUNTS TO USE
             bank = Account.objects.get(name='BDFA')
             main = Account.objects.get(pk=deposit.main_account_id)
 
+            # BANK -> MAIN
             change_account_debit(bank, deposit.amount)
             change_account_credit(main, deposit.amount)
 
-            if not deposit.pay_monthly:
+            if deposit.revocable:
 
                 bank = Account.objects.get(name='BDFA')
                 percents = Account.objects.get(pk=deposit.percent_account_id)
@@ -316,52 +374,129 @@ def is_deposit_ended():
             deposit.save()
 
 
-def close_day(request, pk):
-    Deposit.objects.filter(active=True).update(days_left=F('days_left') - 1)
-    Deposit.objects.filter(active=True).update(days_passed=F('days_passed') + 1)
+def is_credit_closed():
+    bank_credits = Credit.objects.filter(active=True)
+    for credit in bank_credits:
+        percents_amount = credit.amount + credit.amount * credit.percents / 100
+        if credit.amount_paid >= credit.amount_left or credit.days_left <= 0:
 
-    update_deposits()
+            # CLOSE CREDIT
+            # ACCOUNTS TO USE
+            bank = Account.objects.get(name='BDFA')
+            main = Account.objects.get(pk=credit.main_account_id)
+            if not credit.annuity:
+                # MAIN -> BANK
+                change_account_credit(main, credit.amount)
+                change_account_credit(bank, credit.amount)
 
-    is_deposit_ended()
+            '''if credit.annuity:
 
-    deposits = Deposit.objects.filter(client__id=pk)
+                bank = Account.objects.get(name='BDFA')
+                percents = Account.objects.get(pk=credit.percent_account_id)
+                main = Account.objects.get(pk=credit.main_account_id)
 
-    client = Client.objects.get(pk=pk)
-    context = {
-        'client': client,
-        'deposits': deposits,
-    }
-    return render(request, 'clients/clients_deposits.html', context)
+                delta = credit.end_date - credit.start_date
+                amount = ((credit.amount * credit.percents)/100)/math.ceil(delta.days/30)
+                #amount = ((float(credit.amount) * float(credit.percents)) / 100) / (delta.days / 30)
 
+                change_account_credit(percents, amount)
+                change_account_credit(bank, amount)
 
-def close_month(request, pk):
-    Deposit.objects.filter(active=True).update(days_left=F("days_left") - 30)
-    Deposit.objects.filter(active=True).update(days_passed=F('days_passed') + 30)
+                #amount = credit.amount/math.ceil(delta.days/30)
+                #amount = float(credit.amount)/(delta.days / 30)
 
-    update_deposits()
+                # MAIN ACCOUNT -> BANK ACCOUNT
+                #change_account_credit(main, amount)
+                #change_account_credit(bank, amount)'''
 
-    is_deposit_ended()
-
-    deposits = Deposit.objects.filter(client__id=pk)
-    client = Client.objects.get(pk=pk)
-    context = {
-        'client': client,
-        'deposits': deposits,
-    }
-    return render(request, 'clients/clients_deposits.html', context)
+            credit.days_left = 0
+            credit.active = False
+            credit.save()
 
 
-def update_deposits():
-    deposits = Deposit.objects.filter(active=True)
+def close_period(request, pk, period, page):
+    if period == 'day':
+        Deposit.objects.filter(active=True).update(days_left=F('days_left') - 1)
+        Deposit.objects.filter(active=True).update(days_passed=F('days_passed') + 1)
+        Credit.objects.filter(active=True).update(days_left=F('days_left') - 1)
+        Credit.objects.filter(active=True).update(days_passed=F('days_passed') + 1)
+    else:
+        Deposit.objects.filter(active=True).update(days_left=F("days_left") - 30)
+        Deposit.objects.filter(active=True).update(days_passed=F('days_passed') + 30)
+        Credit.objects.filter(active=True).update(days_left=F('days_left') - 30)
+        Credit.objects.filter(active=True).update(days_passed=F('days_passed') + 30)
+
+    pay_irrevocable_deposits_percents()
+    get_credits_percents()
+
+    is_deposit_closed()
+    is_credit_closed()
+
+    if page == 'deposits':
+        deposits = Deposit.objects.filter(client__id=pk)
+
+        client = Client.objects.get(pk=pk)
+        context = {
+            'client': client,
+            'deposits': deposits,
+        }
+        return render(request, 'clients/clients_deposits.html', context)
+    else:
+        bank_credits = Credit.objects.filter(client__id=pk)
+
+        client = Client.objects.get(pk=pk)
+        context = {
+            'client': client,
+            'credits': bank_credits,
+        }
+        return render(request, 'clients/clients_credits.html', context)
+
+
+def pay_irrevocable_deposits_percents():
+    deposits = Deposit.objects.filter(active=True, revocable=False)
     for deposit in deposits:
-
-        if deposit.days_passed % 30 == 0:
+        if deposit.days_passed >= 30:
+            # ACCOUNTS TO USE
             bank = Account.objects.get(name='BDFA')
             percents = Account.objects.get(pk=deposit.percent_account_id)
 
             amount = deposit.amount * deposit.percents / 100
 
+            # BANK ACCOUNT -> PERCENTS ACCOUNT
             change_account_debit(bank, amount)
             change_account_credit(percents, amount)
 
+            deposit.days_passed = 0
             deposit.save()
+
+
+def get_credits_percents():
+    bank_credits = Credit.objects.filter(active=True)
+    for credit in bank_credits:
+        if credit.annuity:
+            pay_period = credit.pay_period
+        else:
+            pay_period = 30
+        if credit.days_passed >= pay_period:
+            # ACCOUNTS TO USE
+            bank = Account.objects.get(name='BDFA')
+            percents = Account.objects.get(pk=credit.percent_account_id)
+            main = Account.objects.get(pk=credit.main_account_id)
+
+            delta = credit.end_date - credit.start_date
+            amount = ((credit.amount * credit.percents)/100)/math.ceil(delta.days/30)
+            #amount = ((float(credit.amount) * float(credit.percents))/100)/(delta.days/30)
+
+            # PERCENTS ACCOUNT -> BANK ACCOUNT
+            change_account_credit(percents, amount)
+            change_account_credit(bank, amount)
+            if credit.annuity:
+
+                amount = credit.amount/math.ceil(delta.days/30)
+                #amount = float(credit.amount) / (delta.days / 30)
+                # MAIN ACCOUNT -> BANK ACCOUNT
+                change_account_credit(main, amount)
+                change_account_credit(bank, amount)
+
+            credit.days_passed = 0
+            credit.save()

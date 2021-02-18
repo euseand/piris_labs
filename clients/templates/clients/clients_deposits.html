@@ -12,13 +12,19 @@
                     <strong>Clients List</strong>
                 </a>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <a role="button" class="btn btn-lg btn-outline-dark form-control"
-                   href="{% url 'clients_accounts' pk=client.pk%}">
+                   href="{% url 'clients_credits' pk=client.pk %}">
+                    <strong>Show Client Credits</strong>
+                </a>
+            </div>
+            <div class="col-md-2">
+                <a role="button" class="btn btn-lg btn-outline-dark form-control"
+                   href="{% url 'clients_accounts' pk=client.pk %}">
                     <strong>Show Client Accounts</strong>
                 </a>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <a role="button" class="btn btn-lg btn-outline-dark form-control"
                    href="{% url 'clients_deposits_create' pk=client.pk %}">
                     <strong>Open New Deposit</strong>
@@ -26,22 +32,21 @@
             </div>
             <div class="col-md-2">
                 <a role="button" class="btn btn-lg btn-outline-dark form-control"
-                   href="{% url 'clients_close_day' pk=client.pk %}">
+                   href="{% url 'clients_close_period' pk=client.pk period='day' page='deposits '%}">
                     <strong>Close Day</strong>
                 </a>
             </div>
             <div class="col-md-2">
                 <a role="button" class="btn btn-lg btn-outline-dark form-control"
-                   href="{% url 'clients_close_month' pk=client.pk %}">
+                   href="{% url 'clients_close_period' pk=client.pk period='month' page='deposits' %}">
                     <strong>Close Month</strong>
                 </a>
             </div>
         </div>
     </div>
-    </div>
     <div class="container-fluid mt-4">
         <table class="table table-bordered table-striped">
-            <tr scope="row">
+            <tr>
                 <th>ID</th>
                 <th>Client</th>
                 <th>Revocable</th>
@@ -51,17 +56,19 @@
                 <th>End Date</th>
                 <th>Amount</th>
                 <th>Percents</th>
-                <th>Main Account Amount</th>
-                <th>Percents Account Amount</th>
+                <th>Main Balance</th>
+                <th>Percents Balance</th>
                 <th>Active</th>
                 <th>Days Left</th>
+                <th>Withdraw Main</th>
+                <th>Withdraw Percents</th>
             </tr>
             {% for deposit in deposits %}
-                <tr scope="row">
+                <tr>
                     <td>{{ deposit.id }}</td>
                     <td>
                         <a href="{% url 'clients_details' pk=client.id %}" class="link-dark text-decoration-none">
-                            {{ deposit.client.last_name}}  {{ deposit.client.first_name }}
+                            {{ deposit.client.last_name }} {{ deposit.client.first_name }}
                         </a>
                     </td>
                     <td>{{ deposit.revocable }}</td>
@@ -75,6 +82,22 @@
                     <td>{{ deposit.percent_account.balance }}</td>
                     <td>{{ deposit.active }}</td>
                     <td>{{ deposit.days_left }}</td>
+                    <td>
+                        {% if deposit.active and deposit.revocable or not deposit.active %}
+                        <a role="button" class="btn btn-md btn-outline-dark form-control"
+                           href="{% url 'clients_deposits_withdraw' pk=client.pk account_id=deposit.main_account.id %}">
+                            <strong>Withdraw Deposit</strong>
+                        </a>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if deposit.active and not deposit.revocable or not deposit.active %}
+                        <a role="button" class="btn btn-md btn-outline-dark form-control"
+                           href="{% url 'clients_deposits_withdraw' pk=client.pk account_id=deposit.percent_account.id %}">
+                            <strong>Withdraw Percents</strong>
+                        </a>
+                        {% endif %}
+                    </td>
                 </tr>
             {% endfor %}
         </table>

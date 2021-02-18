@@ -29,19 +29,19 @@
                         }
                     </script>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <a role="button" class="btn btn-lg btn-outline-dark form-control"
                    href="{% url 'clients_deposits' pk=client.pk%}">
                     <strong>Show Client Deposits</strong>
                 </a>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <a role="button" class="btn btn-lg btn-outline-dark form-control"
                    href="{% url 'clients_credits' pk=client.pk%}">
                     <strong>Show Client Credits</strong>
                 </a>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <a role="button" class="btn btn-lg btn-outline-dark form-control"
                    href="{% url 'clients_accounts' pk=client.pk%}">
                     <strong>Show Client Accounts</strong>
@@ -49,10 +49,9 @@
             </div>
         </div>
     </div>
-    </div>
     <div class="container-fluid mt-4">
         <table class="table table-bordered table-striped">
-            <tr scope="row">
+            <tr>
                 <th>Field</th>
                 <th>Value</th>
             </tr>

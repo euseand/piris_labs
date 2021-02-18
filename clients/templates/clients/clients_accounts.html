@@ -6,36 +6,29 @@
     <h1 class="container-fluid mt-4">Client Accounts : {{ client.last_name }} {{ client.first_name }}</h1>
     <div class="container-fluid mt-4">
         <div class="row">
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <a role="button" class="btn btn-lg btn-outline-dark form-control"
                    href="{% url 'clients_list' %}">
                     <strong>Clients List</strong>
                 </a>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <a role="button" class="btn btn-lg btn-outline-dark form-control"
                    href="{% url 'clients_deposits' pk=client.pk%}">
                     <strong>Show Client Deposits</strong>
                 </a>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <a role="button" class="btn btn-lg btn-outline-dark form-control"
-                   href="{% url 'clients_close_day' pk=client.pk %}">
-                    <strong>Close Day</strong>
-                </a>
-            </div>
-            <div class="col-md-3">
-                <a role="button" class="btn btn-lg btn-outline-dark form-control"
-                   href="{% url 'clients_close_month' pk=client.pk %}">
-                    <strong>Close Month</strong>
+                   href="{% url 'clients_credits' pk=client.pk%}">
+                    <strong>Show Client Credits</strong>
                 </a>
             </div>
         </div>
     </div>
-    </div>
     <div class="container-fluid mt-4">
         <table class="table table-bordered table-striped">
-            <tr scope="row">
+            <tr>
                 <th>ID</th>
                 <th>Client</th>
                 <th>Number</th>
@@ -48,11 +41,12 @@
                 <th>Balance</th>
             </tr>
             {% for account in accounts %}
-                <tr scope="row">
+                <tr>
                     <td>{{ account.id }}</td>
                     <td>
                         <a href="{% url 'clients_details' pk=client.id %}" class="link-dark text-decoration-none">
-                            {{ client.last_name}}  {{ client.first_name }} {{ client.passport_serial }}{{ client.passport_number }}
+                            {{ client.last_name}}  {{ client.first_name }}
+                            {{ client.passport_serial }}{{ client.passport_number }}
                         </a>
                     </td>
                     <td>{{ account.number }}</td>
